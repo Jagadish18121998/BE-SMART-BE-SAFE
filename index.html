@@ -7893,9 +7893,9 @@ function getBalloonColour(index){
 }
 
 
-/* ---------------------------------------------------------
-   BALLOON CLICK
---------------------------------------------------------- */
+/* =========================================================
+   BALLOON SPELLING — CORRECTED VERSION
+========================================================= */
 
 function chooseBalloon(
     button,
@@ -7908,199 +7908,164 @@ function chooseBalloon(
             "balloonFeedback"
         );
 
-
     /*
-       CORRECT
+       Prevent accidental double-clicks
+       while the animation is running.
     */
 
+    const balloons =
+        document.querySelectorAll(
+            "#balloonArea .balloon"
+        );
+
+
+    /* =====================================================
+       CORRECT ANSWER
+    ===================================================== */
+
     if(
-        selected ===
-        correct
+        selected === correct
     ){
 
-        /* -----------------------------------------------
-           STOP FURTHER CLICKS
-        ----------------------------------------------- */
-
-        document
-            .querySelectorAll(
-                ".balloon-button"
-            )
-            .forEach(
-                balloon => {
-
-                    balloon.style.pointerEvents =
-                        "none";
-
-                }
-            );
-
-
-        button.style.zIndex =
-            "9999";
-
-
         /*
-           MOVE THE BALLOON TO THE CENTRE
+           Stop all balloons from being
+           clicked again.
         */
 
-        const rect =
-            button.getBoundingClientRect();
+        balloons.forEach(
+            balloon => {
 
-
-        const centerX =
-            window.innerWidth / 2
-            -
-            (
-                rect.left
-                +
-                rect.width / 2
-            );
-
-
-        const centerY =
-            window.innerHeight / 2
-            -
-            (
-                rect.top
-                +
-                rect.height / 2
-            );
-
-
-        /*
-           FLY TO CENTRE
-        */
-
-        button.animate(
-
-            [
-
-                {
-                    transform:
-                        "translate(0,0) scale(1)",
-                    opacity: 1
-                },
-
-                {
-                    transform:
-                        `translate(
-                            ${centerX}px,
-                            ${centerY}px
-                        ) scale(1.25)`,
-
-                    opacity: 1
-                },
-
-                {
-                    transform:
-                        `translate(
-                            ${centerX}px,
-                            ${centerY}px
-                        ) scale(1.45)`,
-
-                    opacity: 1
-                }
-
-            ],
-
-            {
-                duration: 650,
-
-                easing:
-                    "cubic-bezier(.2,.8,.3,1)",
-
-                fill: "forwards"
+                balloon.disabled =
+                    true;
 
             }
+        );
 
-        ).finished.then(
+
+        /*
+           Blast the selected balloon.
+        */
+
+        button.classList.add(
+            "balloon-pop"
+        );
+
+
+        feedback.className =
+            "feedback feedback-good";
+
+
+        feedback.innerHTML = `
+            🎉
+            <b>Correct!</b>
+            <br>
+            Watch the word reveal!
+        `;
+
+
+        /*
+           Show the word in the centre.
+        */
+
+        setTimeout(
 
             () => {
 
+                const reveal =
+                    document.getElementById(
+                        "balloonReveal"
+                    );
+
+
+                const bigWord =
+                    document.getElementById(
+                        "balloonBigWord"
+                    );
+
+
+                const meaning =
+                    document.getElementById(
+                        "balloonMeaning"
+                    );
+
 
                 /*
-                   BALLOON POP SOUND
+                   Safety check
+                   in case the elements
+                   are not found.
                 */
 
-                playBalloonBurstSound();
+                if(
+                    !reveal ||
+                    !bigWord ||
+                    !meaning
+                ){
+
+                    balloonIndex++;
+
+                    showBalloonLevel();
+
+                    return;
+
+                }
 
 
-                /*
-                   BALLOON BURST
-                */
+                bigWord.textContent =
+                    correct;
 
-                button.animate(
 
-                    [
+                const level =
+                    balloonLevels[
+                        balloonIndex
+                    ];
 
-                        {
-                            transform:
-                                `translate(
-                                    ${centerX}px,
-                                    ${centerY}px
-                                ) scale(1.45)`,
 
-                            opacity: 1
-                        },
+                meaning.innerHTML =
+                    `Meaning: ${level.meaning}`;
 
-                        {
-                            transform:
-                                `translate(
-                                    ${centerX}px,
-                                    ${centerY}px
-                                ) scale(1.9)`,
 
-                            opacity: 0.7
-                        },
-
-                        {
-                            transform:
-                                `translate(
-                                    ${centerX}px,
-                                    ${centerY}px
-                                ) scale(2.7)`,
-
-                            opacity: 0
-
-                        }
-
-                    ],
-
-                    {
-
-                        duration: 300,
-
-                        easing:
-                            "ease-out",
-
-                        fill: "forwards"
-
-                    }
-
+                reveal.classList.add(
+                    "show"
                 );
 
 
                 /*
-                   SHOW CORRECT WORD
-                   IN THE CENTRE
+                   Read the word aloud.
+                */
+
+                if(
+                    typeof speak ===
+                    "function"
+                ){
+
+                    speak(
+                        correct
+                    );
+
+                }
+
+
+                /*
+                   Move to next question.
                 */
 
                 setTimeout(
 
                     () => {
 
-                        showBalloonCorrectWord(
-                            correct
-                        );
+                        balloonIndex++;
+
+                        showBalloonLevel();
 
                     },
 
-                    120
+                    1800
 
                 );
 
-            }
+            },
+
+            350
 
         );
 
@@ -8110,203 +8075,12 @@ function chooseBalloon(
     }
 
 
-    /*
+    /* =====================================================
        WRONG ANSWER
-       KEEP YOUR EXISTING WRONG-ANSWER
-       CODE BELOW THIS POINT.
-    */
-/* ---------------------------------------------------------
-   CENTRE CORRECT WORD
---------------------------------------------------------- */
-
-function showBalloonCorrectWord(
-    word
-){
+    ===================================================== */
 
     /*
-       Remove old celebration
-    */
-
-    const old =
-        document.getElementById(
-            "balloonCorrectCenter"
-        );
-
-
-    if(old){
-
-        old.remove();
-
-    }
-
-
-    /*
-       Create celebration
-    */
-
-    const celebration =
-        document.createElement(
-            "div"
-        );
-
-
-    celebration.id =
-        "balloonCorrectCenter";
-
-
-    celebration.innerHTML = `
-
-        <div
-            class="balloon-burst-stars"
-        >
-            ✨ ⭐ ✨
-        </div>
-
-
-        <div
-            class="balloon-correct-label"
-        >
-            CORRECT!
-        </div>
-
-
-        <div
-            class="balloon-correct-word"
-        >
-            ${word}
-        </div>
-
-
-        <div
-            class="balloon-correct-message"
-        >
-            🎈 Great spelling!
-        </div>
-
-    `;
-
-
-    document.body.appendChild(
-        celebration
-    );
-
-
-    /*
-       POP-IN ANIMATION
-    */
-
-    celebration.animate(
-
-        [
-
-            {
-                opacity: 0,
-
-                transform:
-                    "translate(-50%,-50%) scale(.35)"
-
-            },
-
-            {
-                opacity: 1,
-
-                transform:
-                    "translate(-50%,-50%) scale(1.15)"
-
-            },
-
-            {
-                opacity: 1,
-
-                transform:
-                    "translate(-50%,-50%) scale(1)"
-
-            }
-
-        ],
-
-        {
-
-            duration: 550,
-
-            easing:
-                "cubic-bezier(.2,1.4,.4,1)",
-
-            fill: "forwards"
-
-        }
-
-    );
-
-
-    /*
-       SPEAK THE WORD
-    */
-
-    speak(
-        word
-    );
-
-
-    /*
-       REMOVE CELEBRATION
-    */
-
-    setTimeout(
-
-        () => {
-
-            celebration.animate(
-
-                [
-
-                    {
-                        opacity: 1,
-
-                        transform:
-                            "translate(-50%,-50%) scale(1)"
-
-                    },
-
-                    {
-                        opacity: 0,
-
-                        transform:
-                            "translate(-50%,-50%) scale(1.12)"
-
-                    }
-
-                ],
-
-                {
-
-                    duration: 350,
-
-                    fill: "forwards"
-
-                }
-
-            ).finished.then(
-
-                () => {
-
-                    celebration.remove();
-
-                }
-
-            );
-
-        },
-
-        1500
-
-    );
-
-}
-
-
-    /*
-       WRONG ANSWER
+       First wrong attempt
     */
 
     if(
@@ -8322,26 +8096,36 @@ function showBalloonCorrectWord(
         );
 
 
+        button.disabled =
+            true;
+
+
         feedback.className =
             "feedback feedback-bad";
 
 
-        feedback.textContent =
-            "✗ Not this one. You have one more chance!";
+        feedback.innerHTML = `
+            ❌
+            <b>Not this one!</b>
+            <br>
+            You have one more chance.
+        `;
 
 
-        button.disabled =
-            true;
-
+        /*
+           IMPORTANT:
+           Do NOT move to the next question yet.
+        */
 
         return;
 
     }
 
 
-    /*
-       SECOND WRONG ANSWER
-    */
+    /* =====================================================
+       SECOND WRONG ATTEMPT
+       SHOW ANSWER + MOVE FORWARD
+    ===================================================== */
 
     button.classList.add(
         "balloon-wrong"
@@ -8352,15 +8136,90 @@ function showBalloonCorrectWord(
         true;
 
 
+    /*
+       Disable all remaining balloons.
+    */
+
+    balloons.forEach(
+        balloon => {
+
+            balloon.disabled =
+                true;
+
+        }
+    );
+
+
     feedback.className =
         "feedback feedback-bad";
 
 
-    feedback.textContent =
-        "The correct balloon is still there. Try again!";
+    feedback.innerHTML = `
+
+        ❌
+        <b>Almost!</b>
+
+        <br>
+
+        The correct spelling is:
+
+        <strong
+            style="
+                font-size:28px;
+                display:inline-block;
+                margin-top:8px;
+            "
+        >
+            ${correct}
+        </strong>
+
+    `;
+
+
+    /*
+       Highlight the correct balloon
+       before moving forward.
+    */
+
+    balloons.forEach(
+        balloon => {
+
+            if(
+                balloon.textContent
+                    .trim()
+                    === correct
+            ){
+
+                balloon.classList.add(
+                    "balloon-correct-reveal"
+                );
+
+            }
+
+        }
+    );
+
+
+    /*
+       GUARANTEED progression.
+       This was missing in the old code.
+    */
+
+    setTimeout(
+
+        () => {
+
+            balloonIndex++;
+
+            showBalloonLevel();
+
+        },
+
+        1800
+
+    );
 
 }
-
 
 /* =========================================================
    3. RIDDLE DETECTIVE
